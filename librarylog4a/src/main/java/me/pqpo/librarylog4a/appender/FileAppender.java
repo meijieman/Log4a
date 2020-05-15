@@ -23,7 +23,7 @@ public class FileAppender extends AbsAppender {
     private Formatter formatter;
 
     protected FileAppender(Builder builder) {
-        logBuffer = new LogBuffer(builder.bufferFilePath, builder.bufferSize, builder.logFilePath, builder.compress);
+        logBuffer = new LogBuffer(builder.bufferFilePath, builder.bufferSize, builder.logFilePath, builder.fileMaxSize, builder.compress);
         setMaxSingleLength(builder.bufferSize);
         setLevel(builder.level);
         addInterceptor(builder.interceptors);
@@ -36,6 +36,10 @@ public class FileAppender extends AbsAppender {
 
     public int getBufferSize() {
         return logBuffer.getBufferSize();
+    }
+
+    public long getFileMaxSize() {
+        return logBuffer.getFileMaxSize();
     }
 
     public String getLogPath() {
@@ -75,6 +79,7 @@ public class FileAppender extends AbsAppender {
 
         private String bufferFilePath;
         private String logFilePath;
+        private long fileMaxSize;
         private int bufferSize = 4096;
         private int level = Level.VERBOSE;
         private List<Interceptor> interceptors;
@@ -97,6 +102,11 @@ public class FileAppender extends AbsAppender {
 
         public Builder setLogFilePath(String logFilePath) {
             this.logFilePath = logFilePath;
+            return this;
+        }
+
+        public Builder setFileMaxSize(long size) {
+            this.fileMaxSize = size;
             return this;
         }
 

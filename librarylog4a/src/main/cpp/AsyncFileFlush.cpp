@@ -3,6 +3,7 @@
 //
 
 #include "AsyncFileFlush.h"
+#include "includes/log.h"
 
 AsyncFileFlush::AsyncFileFlush() {
     async_thread = std::thread(&AsyncFileFlush::async_log_thread, this);
@@ -31,6 +32,7 @@ ssize_t AsyncFileFlush::flush(FlushBuffer* flushBuffer) {
     ssize_t written = 0;
     FILE* log_file = flushBuffer->logFile();
     if(log_file != nullptr && flushBuffer->length() > 0) {
+        LOGD("==##flush");
         written = fwrite(flushBuffer->ptr(), flushBuffer->length(), 1, log_file);
         fflush(log_file);
     }
@@ -46,6 +48,7 @@ bool AsyncFileFlush::async_flush(FlushBuffer* flushBuffer) {
     }
     async_buffer.push_back(flushBuffer);
     async_condition.notify_all();
+    LOGD("==##async_flush over");
     return true;
 }
 

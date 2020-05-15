@@ -3,8 +3,9 @@
 //
 
 #include "includes/LogBuffer.h"
+#include "includes/log.h"
 
-LogBuffer::LogBuffer(char *ptr, size_t buffer_size):
+LogBuffer::LogBuffer(char *ptr, long file_max_size, size_t buffer_size):
         buffer_ptr(ptr),
         buffer_size(buffer_size),
         logHeader(buffer_ptr, buffer_size) {
@@ -19,6 +20,11 @@ LogBuffer::LogBuffer(char *ptr, size_t buffer_size):
             openSetLogFile(log_path);
             delete[] log_path;
         }
+        // 设置日志文件最大的大小，文件最小需要大于buffer的大小
+        if (file_max_size < buffer_size) {
+            file_max_size = (long) buffer_size;
+        }
+        this->file_max_size = file_max_size;
     }
     memset(&zStream, 0, sizeof(zStream));
 }
@@ -82,6 +88,7 @@ void LogBuffer::async_flush(AsyncFileFlush *fileFlush, LogBuffer *releaseThis) {
         if (releaseThis != nullptr) {
             delete releaseThis;
         }
+        LOGE("asyncFileFlush is null.");
         return;
     }
     std::lock_guard<std::recursive_mutex> lck_clear(log_mtx);
@@ -89,13 +96,35 @@ void LogBuffer::async_flush(AsyncFileFlush *fileFlush, LogBuffer *releaseThis) {
         if (is_compress && Z_NULL != zStream.state) {
             deflateEnd(&zStream);
         }
+
+        checkFileSize();
+
         FlushBuffer* flushBuffer = new FlushBuffer(log_file);
+        LOGD("==##async_flush data_ptr %s", data_ptr);
         flushBuffer->write(data_ptr, length());
         flushBuffer->releaseThis(releaseThis);
         clear();
         fileFlush->async_flush(flushBuffer);
     } else if (releaseThis != nullptr) {
         delete releaseThis;
+    }
+}
+
+void LogBuffer::checkFileSize() {
+    // 将文件指针移动到文件末尾
+    fseek(log_file, 0, SEEK_END);
+    // 求出当前文件指针距离文件开始的字节数 (对于超过4G大小的文件，这个方法获取文件长度就会溢出了)
+    long size = ftell(log_file);
+
+    LOGW("size of file %ld, max is %ld", size, file_max_size);
+    if (size > file_max_size && file_max_size > 0) {
+        // 清空文件
+        FILE *pFile = fopen(logHeader.getLogPath(), "wb");
+        char *clear = const_cast<char *>("清空文件中...\r\n");
+        fwrite(clear, sizeof(char), strlen(clear), pFile);
+        fclose(pFile);
+
+        LOGE("清空文件 %s", logHeader.getLogPath());
     }
 }
 
@@ -142,7 +171,8 @@ void LogBuffer::initData(char *log_path, size_t log_path_len, bool is_compress) 
     data_ptr = (char *) logHeader.ptr();
     write_ptr = (char *) logHeader.write_ptr();
 
-    openSetLogFile(log_path);
+    bool rst = openSetLogFile(log_path);
+    LOGD("创建日志文件 %d", rst);
 }
 
 char *LogBuffer::getLogPath() {
@@ -162,6 +192,7 @@ bool LogBuffer::initCompress(bool compress) {
 
 bool LogBuffer::openSetLogFile(const char *log_path) {
     if (log_path != nullptr) {
+        // ab+：向二进制文件末添加数据，允许读；
         FILE* _file_log = fopen(log_path, "ab+");
         if(_file_log != NULL) {
             log_file = _file_log;

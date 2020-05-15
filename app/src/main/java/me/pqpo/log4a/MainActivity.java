@@ -1,7 +1,8 @@
 package me.pqpo.log4a;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -16,12 +17,12 @@ import java.util.List;
 import java.util.Locale;
 
 import me.pqpo.librarylog4a.Log4a;
-import me.pqpo.librarylog4a.logger.AppenderLogger;
 import me.pqpo.librarylog4a.appender.AbsAppender;
 import me.pqpo.librarylog4a.appender.AndroidAppender;
 import me.pqpo.librarylog4a.appender.Appender;
 import me.pqpo.librarylog4a.appender.FileAppender;
 import me.pqpo.librarylog4a.formatter.Formatter;
+import me.pqpo.librarylog4a.logger.AppenderLogger;
 import me.pqpo.librarylog4a.logger.Logger;
 import me.pqpo.log4a.append.BufferFileAppender;
 import me.pqpo.log4a.append.NoBufferFileAppender;
@@ -31,7 +32,7 @@ import static me.pqpo.log4a.LogInit.BUFFER_SIZE;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "MainActivity";
+    public static final String TAG = "MainActivity";
 
     EditText etContent;
     EditText etThread;
@@ -53,6 +54,16 @@ public class MainActivity extends AppCompatActivity {
         btnTest = findViewById(R.id.btn_test);
         tvTest = findViewById(R.id.tv_test);
         etTimes = findViewById(R.id.et_times);
+
+        findViewById(R.id.btn_log).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.w(TAG, "点击一下");
+                Log4a.i(TAG, "跟其他演员一样，他有时也会以自我为中心，但我想自己已经找到了如何挫他锐气的办法。");
+//                Log4a.release();
+//                Log4a.flush();
+            }
+        });
 
         btnWrite.setOnClickListener(new View.OnClickListener() {
             @Override

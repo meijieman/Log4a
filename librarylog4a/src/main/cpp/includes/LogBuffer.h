@@ -22,7 +22,7 @@ using namespace log_header;
 
 class LogBuffer {
 public:
-    LogBuffer(char* ptr, size_t capacity);
+    LogBuffer(char* ptr, long file_max_size, size_t capacity);
     ~LogBuffer();
 
     void initData(char *log_path, size_t log_path_len, bool is_compress);
@@ -37,8 +37,9 @@ public:
     void async_flush(AsyncFileFlush *fileFlush, LogBuffer *releaseThis);
     void changeLogPath(char *log_path);
 
+    void checkFileSize();
 public:
-    bool map_buffer = true;
+    bool map_buffer = true; // 是否使用的是 mmap，true 是，false mmap创建失败，使用内存
 
 private:
     void clear();
@@ -47,8 +48,9 @@ private:
     bool openSetLogFile(const char *log_path);
 
     FILE* log_file = nullptr;
+    long file_max_size = 10 * 1024 * 1024; // 日志文件最大大小 单位 byte, 默认大小 10 m
     AsyncFileFlush *fileFlush = nullptr;
-    char* const buffer_ptr = nullptr;
+    char* const buffer_ptr = nullptr; // 缓存文件指针
     char* data_ptr = nullptr;
     char* write_ptr = nullptr;
 

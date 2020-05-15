@@ -52,6 +52,6 @@ public class DateFileFormatter implements Formatter {
         if (mStringBuffer.length() > mTimeLength) {
             mStringBuffer.delete(mTimeLength, mStringBuffer.length());
         }
-        return mStringBuffer.append(Level.getShortLevelName(logLevel)).append(tag).append(msg).append('\n').toString();
+        return mStringBuffer.append(Level.getShortLevelName(logLevel)).append(" ").append(tag).append(" ").append(msg).append('\n').toString();
     }
 }

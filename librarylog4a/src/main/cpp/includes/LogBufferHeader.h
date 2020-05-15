@@ -14,7 +14,7 @@ namespace log_header{
         char magic;
         size_t log_len;
         size_t log_path_len;
-        char* log_path;
+        char* log_path; // 日志文件位置
         bool isCompress;
     };
 

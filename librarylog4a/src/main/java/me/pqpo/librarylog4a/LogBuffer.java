@@ -14,14 +14,16 @@ public class LogBuffer {
     private String bufferPath;
     private int bufferSize;
     private boolean compress;
+    private long fileMaxSize;
 
-    public LogBuffer(String bufferPath, int capacity, String logPath, boolean compress) {
+    public LogBuffer(String bufferPath, int capacity, String logPath, long fileMaxSize, boolean compress) {
         this.bufferPath = bufferPath;
         this.bufferSize = capacity;
         this.logPath = logPath;
+        this.fileMaxSize = fileMaxSize;
         this.compress = compress;
         try {
-            ptr = initNative(bufferPath, capacity, logPath, compress);
+            ptr = initNative(bufferPath, capacity, logPath, fileMaxSize, compress);
         }catch (Exception e) {
             Log.e(TAG, Log4a.getStackTraceString(e));
         }
@@ -52,6 +54,10 @@ public class LogBuffer {
 
     public int getBufferSize() {
         return bufferSize;
+    }
+
+    public long getFileMaxSize() {
+        return fileMaxSize;
     }
 
     public void write(String log) {
@@ -89,7 +95,7 @@ public class LogBuffer {
         System.loadLibrary("log4a-lib");
     }
 
-    private native static long initNative(String bufferPath, int capacity, String logPath, boolean compress);
+    private native static long initNative(String bufferPath, int capacity, String logPath, long fileMaxSize, boolean compress);
 
     private native void writeNative(long ptr, String log);
 
